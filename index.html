@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroDust-IQ - Smart Tailgate & Aerodynamic Dust Optimizer</title>
+    <meta name="description" content="Simulating and optimizing dust control and aerodynamics for heavy vehicles in the Raipur-Bhilai industrial corridor.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Sidebar / Header -->
+        <header class="header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-wind"></i>
+                </div>
+                <div>
+                    <h1>AeroDust-IQ</h1>
+                    <p class="subtitle">Smart Tailgate & Aerodynamic Dust Optimizer</p>
+                </div>
+            </div>
+            <div class="location-badge">
+                <i class="fa-solid fa-route text-primary"></i>
+                <span>Raipur - Bhilai Corridor (NH-53)</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Controls and Settings -->
+            <section class="card control-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-sliders"></i> Control Dashboard</h2>
+                    <p class="card-desc">Adjust simulation parameters in real-time</p>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">System Mode</label>
+                    <div class="toggle-container">
+                        <div class="toggle-item">
+                            <span>Aero Flaps</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-aero" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <span>Smart Water-Mist</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-mist" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-item">
+                            <span>Cargo Tarpaulin</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-cover" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-header">
+                        <span class="control-label">Vehicle Speed</span>
+                        <span class="slider-value" id="val-speed">45 km/h</span>
+                    </div>
+                    <input type="range" id="input-speed" min="0" max="80" value="45" class="range-slider">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Cargo Material</label>
+                    <div class="radio-group">
+                        <label class="radio-btn">
+                            <input type="radio" name="cargo" value="coal" checked>
+                            <span>Coal Dust</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="cargo" value="flyash">
+                            <span>Fly Ash</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="cargo" value="ironore">
+                            <span>Iron Ore</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="cargo" value="sand">
+                            <span>Sand / Gravel</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Road Surface Profile</label>
+                    <select id="input-road" class="select-input">
+                        <option value="highway_paved">NH-53 Main Paved Highway (Low Silt)</option>
+                        <option value="bypass_dusty" selected>Tatibandh Bypass Road (High Silt)</option>
+                        <option value="industrial_unpaved">Urla Unpaved Industrial Access (Extreme Silt)</option>
+                        <option value="plant_haul">Bhilai Steel Plant Internal Haul Road</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Environment Presets (AQI / Season)</label>
+                    <div class="preset-grid">
+                        <button class="btn btn-preset active" id="preset-winter" data-preset="winter">
+                            <i class="fa-solid fa-snowflake"></i> Dry Winter (High AQI)
+                        </button>
+                        <button class="btn btn-preset" id="preset-summer" data-preset="summer">
+                            <i class="fa-solid fa-sun"></i> Hot Summer (Dry Dust)
+                        </button>
+                        <button class="btn btn-preset" id="preset-monsoon" data-preset="monsoon">
+                            <i class="fa-solid fa-cloud-showers-heavy"></i> Monsoon (Wet)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="simulation-controls">
+                    <button id="btn-play" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-play"></i> Start Route Run
+                    </button>
+                    <button id="btn-reset" class="btn btn-secondary btn-block">
+                        <i class="fa-solid fa-arrows-rotate"></i> Reset Counters
+                    </button>
+                </div>
+            </section>
+
+            <!-- Center Panel: Dynamic Visualizer & Route Map -->
+            <section class="center-panel">
+                <!-- Navigation Tabs -->
+                <div class="tabs-header">
+                    <button class="tab-btn active" id="tab-btn-sim" onclick="switchTab('simulator')">
+                        <i class="fa-solid fa-gauge-high"></i> Live Telemetry Simulator
+                    </button>
+                    <button class="tab-btn" id="tab-btn-exp" onclick="switchTab('explainer')">
+                        <i class="fa-solid fa-graduation-cap"></i> Interactive Visual Explainer
+                    </button>
+                </div>
+
+                <!-- Tab 1: Live Simulator -->
+                <div class="tab-content active" id="tab-simulator">
+                    <!-- Vehicle Visualizer -->
+                    <div class="card visualizer-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-truck-moving"></i> Rear Tailgate Aerodynamics & Suppression</h2>
+                            <span class="status-indicator live" id="system-status">System Active</span>
+                        </div>
+                    
+                    <div class="visualizer-container">
+                        <!-- SVG Truck Visualization -->
+                        <svg id="truck-svg" viewBox="0 0 800 350" class="truck-svg">
+                            <!-- Background Sky Gradient -->
+                            <defs>
+                                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#0f172a" />
+                                    <stop offset="100%" stop-color="#1e293b" />
+                                </linearGradient>
+                                <linearGradient id="truckBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#3b82f6" />
+                                    <stop offset="100%" stop-color="#1d4ed8" />
+                                </linearGradient>
+                                <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#64748b" />
+                                    <stop offset="50%" stop-color="#94a3b8" />
+                                    <stop offset="100%" stop-color="#475569" />
+                                </linearGradient>
+                                <linearGradient id="dustGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(180, 150, 120, 0.7)" />
+                                    <stop offset="100%" stop-color="rgba(180, 150, 120, 0)" />
+                                </linearGradient>
+                                <linearGradient id="mistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(56, 189, 248, 0.6)" />
+                                    <stop offset="100%" stop-color="rgba(56, 189, 248, 0)" />
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+
+                            <rect width="800" height="350" fill="url(#skyGrad)" rx="8" />
+
+                            <!-- Road Layer -->
+                            <rect x="0" y="290" width="800" height="60" fill="#090d16" />
+                            <line x1="0" y1="290" x2="800" y2="290" stroke="#334155" stroke-width="2" />
+                            <!-- Moving road dashes -->
+                            <g id="road-lines">
+                                <line x1="50" y1="320" x2="150" y2="320" stroke="#64748b" stroke-dasharray="10, 10" stroke-width="2" class="road-dash" />
+                                <line x1="250" y1="320" x2="350" y2="320" stroke="#64748b" stroke-dasharray="10, 10" stroke-width="2" class="road-dash" />
+                                <line x1="450" y1="320" x2="550" y2="320" stroke="#64748b" stroke-dasharray="10, 10" stroke-width="2" class="road-dash" />
+                                <line x1="650" y1="320" x2="750" y2="320" stroke="#64748b" stroke-dasharray="10, 10" stroke-width="2" class="road-dash" />
+                            </g>
+
+                            <!-- Cargo Material (Inside truck bed) -->
+                            <path id="cargo-material" d="M 120 135 C 180 120, 280 120, 420 135 L 420 220 L 120 220 Z" fill="#2b2d31" />
+                            <!-- Tarp Cover (Dynamic opacity based on toggle) -->
+                            <path id="cargo-tarp" d="M 115 133 Q 270 105 425 133 L 425 142 L 115 142 Z" fill="#047857" opacity="0.9" filter="url(#glow)" />
+
+                            <!-- Truck Cab & Chassis -->
+                            <rect x="420" y="160" width="100" height="90" fill="url(#truckBodyGrad)" rx="5" />
+                            <rect x="440" y="100" width="70" height="70" fill="url(#truckBodyGrad)" rx="10" />
+                            <rect x="450" y="115" width="50" height="35" fill="#1e293b" rx="3" /> <!-- Cab window -->
+                            <rect x="110" y="240" width="370" height="20" fill="url(#metalGrad)" /> <!-- Main chassis beam -->
+
+                            <!-- Dumper Bed Frame -->
+                            <path d="M 115 125 L 425 125 L 425 240 L 115 240 Z" fill="none" stroke="url(#metalGrad)" stroke-width="6" />
+
+                            <!-- Wheels -->
+                            <g class="wheel-group">
+                                <circle cx="160" cy="270" r="28" fill="#090d16" stroke="#475569" stroke-width="4" />
+                                <circle cx="160" cy="270" r="10" fill="#94a3b8" />
+                                <circle cx="230" cy="270" r="28" fill="#090d16" stroke="#475569" stroke-width="4" />
+                                <circle cx="230" cy="270" r="10" fill="#94a3b8" />
+                                <circle cx="380" cy="270" r="28" fill="#090d16" stroke="#475569" stroke-width="4" />
+                                <circle cx="380" cy="270" r="10" fill="#94a3b8" />
+                                <circle cx="450" cy="270" r="28" fill="#090d16" stroke="#475569" stroke-width="4" />
+                                <circle cx="450" cy="270" r="10" fill="#94a3b8" />
+                            </g>
+
+                            <!-- Tailgate details -->
+                            <rect x="110" y="125" width="8" height="115" fill="#475569" />
+
+                            <!-- Aerodynamic Flaps (Dynamic transform via JS) -->
+                            <g id="aero-flaps" transform="translate(110, 125)">
+                                <!-- Top Flap -->
+                                <line id="flap-top" x1="0" y1="0" x2="-35" y2="-10" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" />
+                                <!-- Bottom Flap -->
+                                <line id="flap-bottom" x1="0" y1="115" x2="-35" y2="125" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" />
+                            </g>
+
+                            <!-- Misting nozzles and spray representation -->
+                            <g id="mist-nozzles">
+                                <circle cx="108" cy="230" r="4" fill="#38bdf8" />
+                                <circle cx="108" cy="180" r="4" fill="#38bdf8" />
+                                <circle cx="108" cy="140" r="4" fill="#38bdf8" />
+                            </g>
+                            <!-- Smart Mist Layer -->
+                            <polygon id="mist-spray" points="108,125 30,110 30,260 108,245" fill="url(#mistGrad)" opacity="0.6" />
+
+                            <!-- Road Dust Wake Cloud (Behind vehicle) -->
+                            <g id="dust-cloud-container">
+                                <path id="dust-cloud" d="M 110,250 C 70,220, 20,240, 0,270 L 0,290 L 110,290 Z" fill="url(#dustGrad)" />
+                            </g>
+
+                            <!-- Air Flow Lines (Red turbulent vs Green streamlined) -->
+                            <g id="airflow-lines">
+                                <path id="flow-top-turbulent" class="flow-line turbulent" d="M 600,60 Q 300,50 110,120 Q 70,90 20,110" fill="none" stroke="#f43f5e" stroke-width="2" />
+                                <path id="flow-bottom-turbulent" class="flow-line turbulent" d="M 600,80 Q 350,75 110,240 C 60,260 40,220 20,250" fill="none" stroke="#f43f5e" stroke-width="2" />
+                                <path id="flow-top-clean" class="flow-line streamlined" d="M 600,60 Q 300,50 110,120 Q 75,100 20,80" fill="none" stroke="#10b981" stroke-width="2.5" />
+                                <path id="flow-bottom-clean" class="flow-line streamlined" d="M 600,80 Q 350,75 110,240 Q 75,255 20,270" fill="none" stroke="#10b981" stroke-width="2.5" />
+                            </g>
+                        </svg>
+
+                        <!-- Float overlay data on visualizer -->
+                        <div class="visualizer-overlay">
+                            <div class="overlay-item">
+                                <span class="label">Drag Coefficient:</span>
+                                <span class="value font-mono text-warning" id="val-cd">0.65</span>
+                            </div>
+                            <div class="overlay-item">
+                                <span class="label">Mist flow rate:</span>
+                                <span class="value font-mono text-sky" id="val-flow">0.0 L/min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Progress Tracker -->
+                <div class="card route-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-map-location-dot"></i> Raipur-Bhilai Industrial Corridor Simulator</h2>
+                        <span class="route-distance font-mono" id="route-progress">0.0 / 28.0 km</span>
+                    </div>
+                    <div class="route-track-container">
+                        <div class="route-line-bg">
+                            <div class="route-progress-bar" id="progress-bar"></div>
+                        </div>
+                        
+                        <!-- Waypoints -->
+                        <div class="waypoint-list">
+                            <div class="waypoint active" style="left: 0%;" data-index="0">
+                                <div class="node"><i class="fa-solid fa-industry"></i></div>
+                                <span class="node-name">Bhilai Steel Plant</span>
+                                <span class="node-aqi">AQI: 145</span>
+                            </div>
+                            <div class="waypoint" style="left: 20%;" data-index="1">
+                                <div class="node"><i class="fa-solid fa-traffic-light"></i></div>
+                                <span class="node-name">Power House</span>
+                                <span class="node-aqi">AQI: 160</span>
+                            </div>
+                            <div class="waypoint" style="left: 40%;" data-index="2">
+                                <div class="node"><i class="fa-solid fa-road"></i></div>
+                                <span class="node-name">Charoda Highway</span>
+                                <span class="node-aqi">AQI: 120</span>
+                            </div>
+                            <div class="waypoint" style="left: 60%;" data-index="3">
+                                <div class="node"><i class="fa-solid fa-bridge"></i></div>
+                                <span class="node-name">Kumhari Bypass</span>
+                                <span class="node-aqi">AQI: 220</span>
+                            </div>
+                            <div class="waypoint" style="left: 80%;" data-index="4">
+                                <div class="node"><i class="fa-solid fa-circle-nodes"></i></div>
+                                <span class="node-name">Tatibandh Chowk</span>
+                                <span class="node-aqi">AQI: 260</span>
+                            </div>
+                            <div class="waypoint" style="left: 100%;" data-index="5">
+                                <div class="node"><i class="fa-solid fa-truck-field"></i></div>
+                                <span class="node-name">Urla Ind. Area</span>
+                                <span class="node-aqi">AQI: 290</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- End tab-simulator -->
+
+                <!-- Tab 2: Interactive Explainer -->
+                <div class="tab-content" id="tab-explainer">
+                    <div class="card explainer-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-graduation-cap"></i> Interactive Technology Explainer</h2>
+                            <p class="card-desc">Click through to understand the physics and technology behind AeroDust-IQ</p>
+                        </div>
+
+                        <div class="explainer-slides-container">
+                            <!-- Slide 1: Dual-Source Dust Problem -->
+                            <div class="explainer-slide active" id="slide-1">
+                                <div class="slide-content-layout">
+                                    <div class="slide-visual">
+                                        <div class="visual-badge badge-danger">Unoptimized Baseline</div>
+                                        <svg viewBox="0 0 400 200" class="slide-svg">
+                                            <!-- Background sky -->
+                                            <rect width="400" height="200" fill="#0f172a" rx="8"/>
+                                            <!-- Road -->
+                                            <rect x="0" y="160" width="400" height="40" fill="#090d16"/>
+                                            <line x1="0" y1="160" x2="400" y2="160" stroke="#334155" stroke-width="2"/>
+                                            <!-- Truck body simplified -->
+                                            <rect x="80" y="60" width="160" height="80" fill="#475569" rx="4"/>
+                                            <rect x="240" y="90" width="50" height="50" fill="#334155" rx="3"/>
+                                            <rect x="250" y="98" width="25" height="18" fill="#1e293b" rx="2"/>
+                                            <rect x="60" y="130" width="240" height="10" fill="#1e293b"/>
+                                            <!-- Wheels -->
+                                            <circle cx="110" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="150" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="230" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <!-- Wind spillage particles blowing off open top -->
+                                            <path d="M 230,70 Q 150,40 50,55" fill="none" stroke="#f43f5e" stroke-dasharray="5,5" stroke-width="2"/>
+                                            <circle cx="130" cy="48" r="3.5" fill="#f43f5e"/>
+                                            <circle cx="90" cy="51" r="2.5" fill="#f43f5e"/>
+                                            <circle cx="45" cy="56" r="3.5" fill="#f43f5e"/>
+                                            <!-- Massive red low-pressure swirls behind tailgate -->
+                                            <path d="M 80,70 C 40,50 20,80 40,100" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                                            <path d="M 80,105 C 30,95 20,135 50,140" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                                            <!-- Road dust being vacuumed up from tires -->
+                                            <path d="M 120,158 C 70,165 40,150 25,120" fill="none" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="2"/>
+                                            <circle cx="35" cy="130" r="3.5" fill="#f59e0b"/>
+                                            <circle cx="55" cy="145" r="4.5" fill="#f59e0b"/>
+                                        </svg>
+                                    </div>
+                                    <div class="slide-text">
+                                        <h3>Step 1: The Dual-Source Dust Problem</h3>
+                                        <p>Heavy mineral haulers on the Raipur-Bhilai highway act as major environmental hazards due to two distinct physical phenomena:</p>
+                                        <ul class="explainer-bullets">
+                                            <li><strong>Wind Erosion Spillage:</strong> At highway speed, wind shears across open truck beds, blowing off fine coal dust or fly ash directly into the air (spilling up to 18.7 kg per 100 km).</li>
+                                            <li><strong>Low-Pressure Wake Suction:</strong> The blunt rear profile creates a vacuum zone behind the truck. This low pressure acts like a giant vacuum cleaner, lifting road silt (road dust) directly off the unpaved bypass paths.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slide 2: Cargo Covering -->
+                            <div class="explainer-slide" id="slide-2">
+                                <div class="slide-content-layout">
+                                    <div class="slide-visual">
+                                        <div class="visual-badge badge-success">Intervention 1: Cover Active</div>
+                                        <svg viewBox="0 0 400 200" class="slide-svg">
+                                            <rect width="400" height="200" fill="#0f172a" rx="8"/>
+                                            <rect x="0" y="160" width="400" height="40" fill="#090d16"/>
+                                            <line x1="0" y1="160" x2="400" y2="160" stroke="#334155" stroke-width="2"/>
+                                            <!-- Truck body -->
+                                            <rect x="80" y="60" width="160" height="80" fill="#475569" rx="4"/>
+                                            <!-- Tarpaulin Cover Green -->
+                                            <path d="M 80,60 Q 160,55 240,60" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round"/>
+                                            <rect x="240" y="90" width="50" height="50" fill="#334155" rx="3"/>
+                                            <rect x="250" y="98" width="25" height="18" fill="#1e293b" rx="2"/>
+                                            <rect x="60" y="130" width="240" height="10" fill="#1e293b"/>
+                                            <circle cx="110" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="150" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="230" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <!-- No wind spillage from top, but wake suction still active -->
+                                            <path d="M 80,70 C 40,50 20,80 40,100" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                                            <path d="M 80,105 C 30,95 20,135 50,140" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                                            <path d="M 120,158 C 70,165 40,150 25,120" fill="none" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="slide-text">
+                                        <h3>Step 2: Automated Cargo Cover (-97% Spillage)</h3>
+                                        <p>The first step focuses on enclosing the cargo to prevent direct wind shear erosion:</p>
+                                        <ul class="explainer-bullets">
+                                            <li><strong>PVC Tarpaulin ($650\text{ g/m}^2$):</strong> A heavy-duty polymer shield deploys dynamically over the bed once the vehicle speeds exceed $20\text{ km/h}$.</li>
+                                            <li><strong>Eliminating Spillage:</strong> Stops direct cargo blow-off, dropping it from $0.187\text{ kg/km}$ to $<0.005\text{ kg/km}$ (saving approximately $18.5\text{ kg}$ of raw material per truck on a Raipur-Bhilai round trip).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slide 3: Aerodynamic Flaps -->
+                            <div class="explainer-slide" id="slide-3">
+                                <div class="slide-content-layout">
+                                    <div class="slide-visual">
+                                        <div class="visual-badge badge-success">Intervention 2: Aero Active</div>
+                                        <svg viewBox="0 0 400 200" class="slide-svg">
+                                            <rect width="400" height="200" fill="#0f172a" rx="8"/>
+                                            <rect x="0" y="160" width="400" height="40" fill="#090d16"/>
+                                            <line x1="0" y1="160" x2="400" y2="160" stroke="#334155" stroke-width="2"/>
+                                            <!-- Truck body -->
+                                            <rect x="80" y="60" width="160" height="80" fill="#475569" rx="4"/>
+                                            <path d="M 80,60 Q 160,55 240,60" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round"/>
+                                            <rect x="240" y="90" width="50" height="50" fill="#334155" rx="3"/>
+                                            <rect x="250" y="98" width="25" height="18" fill="#1e293b" rx="2"/>
+                                            <rect x="60" y="130" width="240" height="10" fill="#1e293b"/>
+                                            <circle cx="110" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="150" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="230" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <!-- Flaps Extended (Orange) -->
+                                            <line x1="80" y1="60" x2="55" y2="52" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+                                            <line x1="80" y1="140" x2="55" y2="148" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+                                            <!-- Smooth green streamlines -->
+                                            <path d="M 80,60 Q 50,50 10,45" fill="none" stroke="#10b981" stroke-width="2"/>
+                                            <path d="M 80,140 Q 55,148 10,152" fill="none" stroke="#10b981" stroke-width="2"/>
+                                            <!-- Weakened road dust lift -->
+                                            <path d="M 120,158 Q 90,162 70,155" fill="none" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="1.5" opacity="0.4"/>
+                                        </svg>
+                                    </div>
+                                    <div class="slide-text">
+                                        <h3>Step 3: Aerodynamic Boat-Tails (-42% Wake Lift)</h3>
+                                        <p>Next, we tackle the massive air pressure vacuum created behind the flat tailgate:</p>
+                                        <ul class="explainer-bullets">
+                                            <li><strong>Active Flaps:</strong> Dual-panel boat tails automatically extend to a optimized $15^\circ-20^\circ$ angle using electronic linear actuators.</li>
+                                            <li><strong>Vortex Control:</strong> The flaps direct passing air into the low-pressure pocket. This eliminates the "suction vacuum" pulling road dust up into the air, reducing resuspended PM10 by **$-42\%$**.</li>
+                                            <li><strong>Fuel Savings:</strong> Reduces aerodynamic drag coefficient ($Cd$) from $0.65$ to $0.48$, translating into **$+6.2\%$ fuel savings** on high-speed bypasses.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slide 4: Water Mist Curtain -->
+                            <div class="explainer-slide" id="slide-4">
+                                <div class="slide-content-layout">
+                                    <div class="slide-visual">
+                                        <div class="visual-badge badge-success">Intervention 3: Mist Active</div>
+                                        <svg viewBox="0 0 400 200" class="slide-svg">
+                                            <rect width="400" height="200" fill="#0f172a" rx="8"/>
+                                            <rect x="0" y="160" width="400" height="40" fill="#090d16"/>
+                                            <line x1="0" y1="160" x2="400" y2="160" stroke="#334155" stroke-width="2"/>
+                                            <!-- Truck body -->
+                                            <rect x="80" y="60" width="160" height="80" fill="#475569" rx="4"/>
+                                            <path d="M 80,60 Q 160,55 240,60" fill="none" stroke="#10b981" stroke-width="5" stroke-linecap="round"/>
+                                            <rect x="240" y="90" width="50" height="50" fill="#334155" rx="3"/>
+                                            <rect x="60" y="130" width="240" height="10" fill="#1e293b"/>
+                                            <circle cx="110" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="150" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <circle cx="230" cy="148" r="15" fill="#020617" stroke="#475569" stroke-width="2"/>
+                                            <line x1="80" y1="60" x2="55" y2="52" stroke="#f59e0b" stroke-width="4"/>
+                                            <line x1="80" y1="140" x2="55" y2="148" stroke="#f59e0b" stroke-width="4"/>
+                                            <!-- Mist Spray curtain (Blue) -->
+                                            <polygon points="78,60 20,50 20,150 78,140" fill="rgba(56, 189, 248, 0.45)"/>
+                                            <!-- Trapped dust particles -->
+                                            <circle cx="40" cy="95" r="4.5" fill="#f59e0b" opacity="0.3"/>
+                                            <line x1="40" y1="95" x2="40" y2="155" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="2,2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="slide-text">
+                                        <h3>Step 4: Smart Mist Curtain (-82% Dust Captured)</h3>
+                                        <p>For any road dust that still manages to escape, a pressurized micro-droplet curtain knocks it down:</p>
+                                        <ul class="explainer-bullets">
+                                            <li><strong>PM Coalescence:</strong> 8x tailgate nozzles project a fine $30\text{ }\mu\text{m}$ water-mist. These micro-droplets collide with fine dust particles, binding and making them heavy enough to settle instantly on the road.</li>
+                                            <li><strong>Adaptive Flow Control:</strong> Solenoid valves adjust the water flow between $0.5\text{ L/min}$ to $3.0\text{ L/min}$ depending on the vehicle's speed and road dust levels, preventing water wastage in clean regions.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slide 5: Combined Synergy -->
+                            <div class="explainer-slide" id="slide-5">
+                                <div class="slide-content-layout">
+                                    <div class="slide-visual">
+                                        <div class="visual-badge badge-success">Optimized Outcome</div>
+                                        <div class="synergy-stats">
+                                            <div class="synergy-row">
+                                                <span class="syn-icon text-success"><i class="fa-solid fa-cloud"></i></span>
+                                                <div class="syn-details">
+                                                    <span class="syn-title">Total PM10 Reduction</span>
+                                                    <span class="syn-val text-success">-90.5%</span>
+                                                </div>
+                                            </div>
+                                            <div class="synergy-row">
+                                                <span class="syn-icon text-warning"><i class="fa-solid fa-gauge"></i></span>
+                                                <div class="syn-details">
+                                                    <span class="syn-title">Aerodynamic Drag ($Cd$)</span>
+                                                    <span class="syn-val text-warning">0.65 ➔ 0.48</span>
+                                                </div>
+                                            </div>
+                                            <div class="synergy-row">
+                                                <span class="syn-icon text-emerald"><i class="fa-solid fa-gas-pump"></i></span>
+                                                <div class="syn-details">
+                                                    <span class="syn-title">Fuel Efficiency Gains</span>
+                                                    <span class="syn-val text-emerald">+6.2%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slide-text">
+                                        <h3>Step 5: Net Combined Impact</h3>
+                                        <p>When all three technologies are synchronized, they create a highly optimized loop:</p>
+                                        <table class="explainer-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Parameter</th>
+                                                    <th>Baseline</th>
+                                                    <th>AeroDust-IQ</th>
+                                                    <th>Improvement</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Total Dust (PM10)</td>
+                                                    <td>1.687 kg/km</td>
+                                                    <td>0.160 kg/km</td>
+                                                    <td class="text-success">-90.5%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Cargo Lost (Coal/Ash)</td>
+                                                    <td>18.7 kg/trip</td>
+                                                    <td>0.5 kg/trip</td>
+                                                    <td class="text-success">-97.3%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Average Fuel Spent</td>
+                                                    <td>100.0 L</td>
+                                                    <td>93.8 L</td>
+                                                    <td class="text-success">-6.2%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="explainer-footer">
+                            <button class="btn btn-secondary" id="btn-prev-slide" onclick="changeSlide(-1)" disabled>
+                                <i class="fa-solid fa-chevron-left"></i> Previous
+                            </button>
+                            <div class="slide-dots">
+                                <span class="dot active" onclick="goDirectToSlide(1)"></span>
+                                <span class="dot" onclick="goDirectToSlide(2)"></span>
+                                <span class="dot" onclick="goDirectToSlide(3)"></span>
+                                <span class="dot" onclick="goDirectToSlide(4)"></span>
+                                <span class="dot" onclick="goDirectToSlide(5)"></span>
+                            </div>
+                            <button class="btn btn-primary" id="btn-next-slide" onclick="changeSlide(1)">
+                                Next <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Live Stats and Comparisons -->
+            <section class="card stats-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> Optimization Analysis</h2>
+                    <p class="card-desc">Real-time telemetry and comparative savings</p>
+                </div>
+
+                <!-- Numerical readout dashboard -->
+                <div class="metrics-grid">
+                    <div class="metric-box box-red">
+                        <span class="metric-title">Standard PM10</span>
+                        <span class="metric-value font-mono" id="metric-std-pm">1.69 <span class="unit">kg/km</span></span>
+                    </div>
+                    <div class="metric-box box-green">
+                        <span class="metric-title">Optimized PM10</span>
+                        <span class="metric-value font-mono text-success" id="metric-opt-pm">0.16 <span class="unit">kg/km</span></span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Water Remaining</span>
+                        <span class="metric-value font-mono text-primary" id="metric-water">100%</span>
+                        <div class="mini-bar-bg"><div class="mini-bar-fill" id="water-bar" style="width: 100%;"></div></div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Fuel Saved</span>
+                        <span class="metric-value font-mono text-warning" id="metric-fuel">0.0 <span class="unit">L</span></span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Cargo Saved</span>
+                        <span class="metric-value font-mono" id="metric-cargo">0.0 <span class="unit">kg</span></span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Net Dust Reduction</span>
+                        <span class="metric-value font-mono text-emerald" id="metric-reduction">-90.5%</span>
+                    </div>
+                </div>
+
+                <!-- Chart.js Graphics -->
+                <div class="chart-container">
+                    <canvas id="emissionChart"></canvas>
+                </div>
+                <div class="chart-container mt-1">
+                    <canvas id="cumulativeChart"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <!-- Technical Specification Details Footer Panel -->
+        <footer class="footer card">
+            <div class="footer-grid">
+                <div>
+                    <h3><i class="fa-solid fa-circle-info"></i> How it works</h3>
+                    <p>The boat-tail flaps compress the turbulent vortex at the rear, reducing the low-pressure "suction" force that pulls up road dust ($-42\%$ resuspended dust reduction). The smart water-mist curtain traps escaping fine particles, while the automated tarp cover prevents cargo wind blow-off.</p>
+                </div>
+                <div>
+                    <h3><i class="fa-solid fa-microchip"></i> System Constants</h3>
+                    <ul>
+                        <li>Baseline Drag ($Cd_{std}$): 0.65</li>
+                        <li>Optimized Drag ($Cd_{opt}$): 0.48</li>
+                        <li>Silt Loading (Tatibandh): 15.0 g/m²</li>
+                        <li>Spray Water Droplet Size: 30 µm</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3><i class="fa-solid fa-leaf"></i> Raipur-Bhilai Impact</h3>
+                    <p>Widespread adoption of this tailgate technology could reduce daily particulate matter pollution from industrial heavy transport by <strong>8,900+ kg of PM10</strong> across the corridor.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Simulation Javascript logic -->
+    <script src="app.js"></script>
+</body>
+</html>
